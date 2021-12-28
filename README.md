@@ -1,5 +1,3 @@
 # Papyrus
 
-cms-backend
-pg-promise
-express
+cms-backend: pg-promise express
