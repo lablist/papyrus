@@ -46,7 +46,10 @@ const unlinkFiles = (paths=[]) => {
     }
 
     for (const singlePath of paths) {
-      const filePath = resolve(singlePath)
+      const filePath = resolve(singlePath);
+      if (filePath === appPath) {
+        return;
+      }
       if (existsSync(filePath)) {
         unlink(filePath, (error)=>{unlinkcb(error, filePath)})
       } else {
