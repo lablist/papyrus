@@ -2,6 +2,8 @@
 const { writeFileSync } = require("fs");
 const path = require("path");
 const ejs = require("ejs");
+const _ = require("lodash");
+const { query } = require("../database");
 const {
   status,
   statusSuccess,
@@ -9,20 +11,33 @@ const {
 } = require("../helpers/status");
 const appPath = path.resolve();
 
+
+const dict = {
+  success: {
+    created: "Сайт создан.",
+  },
+  errors: {
+    unknown: "Неизвестная ошибка.",
+    template: "Ошибка сборки шаблона страницы."
+  }
+}
+
 const all = async (req, res) => {
-  const mainPathStr = path.join(appPath, "/src/public/");
+  try {
+    const getCompany = await query('SELECT * FROM company LIMIT 1;');
+    const cData = getCompany[0];
+    const homePathStr = path.join(appPath, "/src/views/pages/home.ejs");
+    const homeStr = await ejs.renderFile(homePathStr, {data: cData}, {async: false });
+    console.log("homeStir", homeStr);
 
-  const headerPathStr = path.join(appPath, "/src/views/partials/header.ejs");
-  const wrapperPathStr = path.join(appPath, "/src/views/partials/wrapper.ejs");
-  const footerPathStr = path.join(appPath, "/src/views/partials/footer.ejs");
-  
-  const headerStr = await ejs.renderFile(headerPathStr);
-  const wrapperStr = await ejs.renderFile(wrapperPathStr);
-  const footerStr = await ejs.renderFile(footerPathStr);
-
-  writeFileSync(mainPathStr+"index.html", [headerStr, wrapperStr, footerStr].join("\r\n"),{encoding:'utf8',flag:'w'});
-
-  statusSuccess.message = "Сайт создан.";
+    const mainPathStr = path.join(appPath, "/src/public/index.html");
+    writeFileSync(mainPathStr, homeStr, { encoding:'utf8', flag:'w' });
+  } catch (error) {
+    statusError.message = dict.errors.unknown;
+    return res.status(status.error).send(statusError);
+  }
+  statusSuccess.data= {} 
+  statusSuccess.message = dict.success.created;
   return res.status(status.created).send(statusSuccess);
 }
 

@@ -14,23 +14,7 @@ const {
   mkdirSync
 } = require("fs");
 const appPath = resolve();
-const imgPath = "src/public/img";
-
-const toLinuxPath = (pathStr="")=> {
-  if (isEmpty(pathStr) || !isString(pathStr)) {
-    return "";
-  };
-
-  return resolve(pathStr).replace(appPath,"").replace(/\\/g, "/").substr(1);
-}
-
-const getLinuxPath = (reqFile={}) => {
-  if (isEmpty(reqFile) && !isObject(reqFile)) {
-    return "";
-  };
-
-  return toLinuxPath(reqFile.path);
-}
+const imgSavePath = "src/public/assets/img";
 
 const unlinkFiles = (paths=[]) => {
   if (isEmpty(paths)) {
@@ -63,7 +47,7 @@ const unlinkFiles = (paths=[]) => {
 
 const uploadImg = (filePath, subFolderName="") => {
   try {
-    const destPath = `${imgPath}/${subFolderName}`;
+    const destPath = `${imgSavePath}/${subFolderName}`;
     if (!existsSync(destPath)) {
       mkdirSync(destPath);
     }
@@ -83,7 +67,7 @@ const uploadImg = (filePath, subFolderName="") => {
       unlinkFiles([filePath]);
       console.info("File was copied to destination");
     });
-    return toLinuxPath(newFullFilePath);
+    return `${subFolderName}${subFolderName.length === 0 ? "" : "/"}${fileName}`;
   } catch (error) {
     unlinkFiles([filePath]);
     console.error("Error in uploadImg:", filePath, error);
@@ -91,7 +75,6 @@ const uploadImg = (filePath, subFolderName="") => {
 }
 
 module.exports = {
-  getLinuxPath,
   unlinkFiles,
   uploadImg
 };

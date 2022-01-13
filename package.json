@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon ./src/index.js",
-    "watch:css": "sass --watch src/client/scss/:src/public/css/",
+    "css": "sass --watch src/client/scss/:src/public/assets/css/",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Alexey Bubeev <alexey.bubeev@gmail.com>",
@@ -29,5 +29,8 @@
       "src/public/*",
       "tmp/*"
     ]
+  },
+  "devDependencies": {
+    "sass": "^1.45.1"
   }
 }

@@ -16,18 +16,15 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 // TODO: app.use(cors({origin: "https://www.my.site/"}));
- 
-app.use(helmet());
-app.use(helmet.hidePoweredBy());
+
+// app.use(helmet());
+// app.use(helmet.hidePoweredBy());
 
 app.use(express.urlencoded({
   extended: true
 }));
 
-app.use("/static", express.static(`${__dirname}/public`));
 routes(app);
-app.set("view engine", "ejs");
-app.set("views", "src/views/pages");
 
 app.listen(port).on("listening", () => {
   console.info(`App runs on port: ${port}`);

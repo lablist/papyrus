@@ -3,6 +3,7 @@
 src/client/
 src/public/
 src/views/
+process.yml
 
 ### npm ###
 dist/

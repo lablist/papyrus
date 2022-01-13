@@ -20,7 +20,6 @@ const {
   statusError
 } = require("../helpers/status");
 const {
-  getLinuxPath,
   unlinkFiles,
   uploadImg
 } = require("../helpers/files");
@@ -262,7 +261,7 @@ const read = async (req, res) => {
       ns.rate;
     `;
     const dbResponse = await query(getQuery);
-    statusSuccess.data = _.first(dbResponse);
+    statusSuccess.data = dbResponse;
     statusSuccess.message = dict.success.dataReceived;
     return res.status(status.success).send(statusSuccess);
   } catch (error) {
@@ -284,10 +283,10 @@ const create = async (req, res) => {
     active=false,
     rights=[]
   } = req.body;
-  const lxFilePath = getLinuxPath(req.file);
+  const filePath = req.file.path;
 
   if (empty(login) || empty(password) || empty(email)) {
-    unlinkFiles([lxFilePath]);
+    unlinkFiles([filePath]);
     statusError.message = dict.errors.emptyLoginOrPasswordOrEmail;
     return res.status(status.bad).send(statusError);
   }
@@ -298,7 +297,7 @@ const create = async (req, res) => {
   }
 
   if (!validatePassword(password)) {
-    unlinkFiles([lxFilePath]);
+    unlinkFiles([filePath]);
     statusError.message = dict.errors.validatePassword;
     return res.status(status.bad).send(statusError);
   }
@@ -307,19 +306,19 @@ const create = async (req, res) => {
     const doubleUser = await _getDoubleLoginOrEmail(login, email);
     if (!_.isEmpty(doubleUser)) {
       if (doubleUser.login) {
-        unlinkFiles([lxFilePath]);
+        unlinkFiles([filePath]);
         statusError.message = dict.errors.duplicateUserLogin;
         return res.status(status.error).send(statusError);
       }
       if (doubleUser.email) {
-        unlinkFiles([lxFilePath]);
+        unlinkFiles([filePath]);
         statusError.message = dict.errors.duplicateUserEmail;
         return res.status(status.error).send(statusError);
       }
     }
   } catch (error) {
     console.error(error);
-    unlinkFiles([lxFilePath]);
+    unlinkFiles([filePath]);
     statusError.message = dict.errors.unknown;
     return res.status(status.error).send(statusError);
   }
@@ -341,7 +340,7 @@ const create = async (req, res) => {
     returning *;
   `;
 
-  const imgFilePath = uploadImg(lxFilePath, "photo").replace("src/public/", "");
+  const imgFilePath = uploadImg(lxFilePath, "photo");
   try {
     const dbResponse = await loggedQuery(req.user.id, createUserQuery, [
       login,
@@ -397,22 +396,22 @@ const update = async (req, res) => {
     oldPassword,
     newPassword
   } = req.body;
-  const lxFilePath = getLinuxPath(req.file);
+  const filePath = req.file.path;
 
   if (empty(id)) {
-    unlinkFiles([lxFilePath]);
+    unlinkFiles([filePath]);
     statusError.message = dict.errors.emptyUserId;
     return res.status(status.bad).send(statusError);
   }
 
   if (!empty(email) && !isValidEmail(email)) {
-    unlinkFiles([lxFilePath]);
+    unlinkFiles([filePath]);
     statusError.message = dict.errors.fakeEmail;
     return res.status(status.bad).send(statusError);
   }
 
   if (!empty(newPassword) && !validatePassword(newPassword)) {
-    unlinkFiles([lxFilePath]);
+    unlinkFiles([filePath]);
     statusError.message = dict.errors.validatePassword;
     return res.status(status.bad).send(statusError);
   }
@@ -439,19 +438,19 @@ const update = async (req, res) => {
     const getUserResponse = await query(getUserQuery, [id]);
     const oldUser = _.first(getUserResponse);
     if (!oldUser) {
-      unlinkFiles([lxFilePath]);
+      unlinkFiles([filePath]);
       statusError.message = dict.errors.fakeUserId;
       return res.status(status.notfound).send(statusError);
     }
 
     if (selfUpdate && !empty(newPassword) && empty(oldPassword)) {
-      unlinkFiles([lxFilePath]);
+      unlinkFiles([filePath]);
       statusError.message = dict.errors.oldPasswordRequired;
       return res.status(status.bad).send(statusError);
     }
 
     if (selfUpdate && !empty(newPassword) && !comparePassword(oldPassword, oldUser.hashed_password)) {
-      unlinkFiles([lxFilePath]);
+      unlinkFiles([filePath]);
       statusError.message = dict.errors.fakePassword;
       return res.status(status.bad).send(statusError);
     }
@@ -459,12 +458,12 @@ const update = async (req, res) => {
     const doubleUser = await _getDoubleLoginOrEmail(login, email, id);
     if (!_.isEmpty(doubleUser)) {
       if (doubleUser.login) {
-        unlinkFiles([lxFilePath]);
+        unlinkFiles([filePath]);
         statusError.message = dict.errors.duplicateUserLogin;
         return res.status(status.error).send(statusError);
       }
       if (doubleUser.email) {
-        unlinkFiles([lxFilePath]);
+        unlinkFiles([filePath]);
         statusError.message = dict.errors.duplicateUserEmail;
         return res.status(status.error).send(statusError);
       }
@@ -500,8 +499,8 @@ const update = async (req, res) => {
       WHERE id_user=$10 returning *;
     `;
 
-    if (!_.isEmpty(lxFilePath) &&_.isString(oldUser.photo)) {
-      unlinkFiles([`src/public/${oldUser.photo}`]);
+    if (!_.isEmpty(filePath) &&_.isString(oldUser.photo)) {
+      unlinkFiles([`src/public/assets/${oldUser.photo}`]);
     }
 
     const updateValue = [
@@ -513,7 +512,7 @@ const update = async (req, res) => {
       _.isUndefined(lastname) ? oldUser.last_name : lastname,
       _.isUndefined(description) ? oldUser.description : description,
       _.isUndefined(active) ? oldUser.active : active,
-      _.isEmpty(lxFilePath) ? oldUser.photo : uploadImg(lxFilePath, "photo").replace("src/public/", ""),
+      _.isEmpty(filePath) ? oldUser.photo : uploadImg(filePath, "photo"),
       id
     ];
 
