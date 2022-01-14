@@ -19,14 +19,11 @@ const auth = (requiredRights=[]) => {
   
     try {
       const payload = verify(token, masterKey);
+
       req.user = {
         id: payload?.id,
         login: payload?.login,
         email: payload?.email,
-        firstname: payload?.firstname,
-        middlename: payload?.middlename,
-        lastname: payload?.lastname,
-        description: payload?.description,
         rights: payload?.rights
       };
     } catch (error) {
@@ -34,7 +31,7 @@ const auth = (requiredRights=[]) => {
       return res.status(status.unauthorized).send(statusError);
     }
 
-    if (!requiredRights.length) {
+    if (!requiredRights?.length) {
       return next();
     }
 

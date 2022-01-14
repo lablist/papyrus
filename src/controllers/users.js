@@ -21,7 +21,9 @@ const {
 } = require("../helpers/status");
 const {
   unlinkFiles,
-  uploadImg
+  uploadImg,
+  getImagePath,
+  getImagePublicPath
 } = require("../helpers/files");
 
 const dict = {
@@ -115,7 +117,7 @@ const login = async (req, res) => {
       lastname: firstRow.lastname,
       fio: firstRow.fio,
       description: firstRow.description,
-      photo: firstRow.photo,
+      photo: getImagePublicPath(firstRow?.photo),
       rights: firstRow.rights,
       token: token
     };
@@ -209,6 +211,7 @@ const read = async (req, res) => {
     `;
     const dbResponse = await query(getUsersQuery);
     statusSuccess.data = _.first(dbResponse);
+    statusSuccess.data.photo = getImagePublicPath(statusSuccess.data.photo);
     statusSuccess.message = dict.success.dataReceived;
     return res.status(status.success).send(statusSuccess);
   } catch (error) {
@@ -316,7 +319,7 @@ const create = async (req, res) => {
       fio: [_.toString(firstRow?.last_name), _.toString(firstRow?.first_name), _.toString(firstRow?.middle_name)].join(' ').trim(),
       description: _.toString(firstRow?.description),
       active: firstRow?.active,
-      photo: _.toString(firstRow?.photo),
+      photo: getImagePublicPath(firstRow?.photo),
       rights: _.map(rightsResponse, "right_id")
     };
     statusSuccess.message = dict.success.dataAdded;
@@ -430,7 +433,6 @@ const update = async (req, res) => {
     }
 
     const hashedPassword = !empty(newPassword) ? hashPassword(newPassword) : oldUser.hashed_password;
-
     const updateUserQuery = `
       UPDATE users SET
         login=$1,
@@ -447,7 +449,7 @@ const update = async (req, res) => {
     `;
 
     if (!_.isEmpty(filePath) &&_.isString(oldUser.photo)) {
-      unlinkFiles([`src/public/assets/${oldUser.photo}`]);
+      unlinkFiles([getImagePath(oldUser.photo)]);
     }
 
     const updateValue = [
@@ -475,13 +477,13 @@ const update = async (req, res) => {
       fio: [_.toString(firstRow?.last_name), _.toString(firstRow?.first_name), _.toString(firstRow?.middle_name)].join(' ').trim(),
       description: _.toString(firstRow?.description),
       active: firstRow?.active,
-      photo: _.toString(firstRow?.photo),
+      photo: getImagePublicPath(firstRow?.photo),
       rights: rightsArr
     };
 
     if (selfUpdate) {
       statusSuccess.data["token"] = generateUserToken({
-        id: firstRow.id,
+        id: oldUser.id,
         login: firstRow.login,
         email: firstRow.email,
         rights: rightsArr

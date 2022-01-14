@@ -1,9 +1,4 @@
 const {
-  isEmpty,
-  isObject,
-  isString
-} = require("lodash");
-const {
   resolve,
   parse
 } = require("path");
@@ -14,10 +9,31 @@ const {
   mkdirSync
 } = require("fs");
 const appPath = resolve();
+
 const imgSavePath = "src/public/assets/img";
+const imgGetPath = "assets/img";
+
+typeof myVar === 'string'
+
+const notFilledString = (v)=> (typeof v !== "string" || (typeof v === "string" && v.length === 0));
+const notFilledArray = (v)=> (!Array.isArray(v) || (Array.isArray(v)  && v.length === 0));
+
+const getImagePath = (dbImagePathString) => {
+  if (notFilledString(dbImagePathString)) {
+    return "";
+  }
+  return `${imgSavePath}/${dbImagePathString}`
+}
+
+const getImagePublicPath = (dbImagePathString) => {
+  if (notFilledString(dbImagePathString)) {
+    return "";
+  }
+  return `${imgGetPath}/${dbImagePathString}`
+}
 
 const unlinkFiles = (paths=[]) => {
-  if (isEmpty(paths)) {
+  if (notFilledArray(paths)) {
     return;
   }
   try {
@@ -56,7 +72,7 @@ const uploadImg = (filePath, subFolderName="") => {
     const fileName = parse(filePath).base;
 
     const newFilePath = resolve(destPath);
-    const newFullFilePath = `${newFilePath}/${fileName}`;
+    const newFullFilePath = resolve(`${newFilePath}/${fileName}`);
 
     copyFile(oldFilePath, newFullFilePath, (err) => {
       if (err) {
@@ -75,6 +91,10 @@ const uploadImg = (filePath, subFolderName="") => {
 }
 
 module.exports = {
+  notFilledString,
+  notFilledArray,
   unlinkFiles,
-  uploadImg
+  uploadImg,
+  getImagePath,
+  getImagePublicPath
 };

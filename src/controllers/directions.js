@@ -500,7 +500,7 @@ const update = async (req, res) => {
     `;
 
     if (!_.isEmpty(filePath) &&_.isString(oldUser.photo)) {
-      unlinkFiles([`src/public/assets/${oldUser.photo}`]);
+      unlinkFiles([`src/public/img/assets/${oldUser.photo}`]);
     }
 
     const updateValue = [
