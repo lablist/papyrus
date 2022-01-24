@@ -11,9 +11,8 @@ const {
   update
 } = require('../controllers/directions');
 
-router.post('/filters', auth([rights.administrator]), filters);
 router.put('/create', auth([rights.administrator]), upload.single('photo'), create);
 router.get('/read', auth([rights.administrator]), read);
-router.patch('/update', auth([rights.administrator]), upload.single('photo'), update);
+router.post('/update', auth([rights.administrator]), upload.single('photo'), update);
 
 module.exports = router;

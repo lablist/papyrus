@@ -2,6 +2,7 @@ const generate = require("./generate");
 const users = require("./users");
 const directions = require("./directions");
 const company = require("./company");
+const directionsTypes = require("./directionsTypes");
 const { apiDir } = require("../config");
 
 const rPaths = {
@@ -9,6 +10,7 @@ const rPaths = {
   generate: `/${apiDir}/generate`,
   directions: `/${apiDir}/directions`,
   company: `/${apiDir}/company`,
+  directionsTypes: `/${apiDir}/directionsTypes`,
 }
 
 module.exports = function(app) {
@@ -16,4 +18,5 @@ module.exports = function(app) {
   app.use(rPaths.generate, generate);
   app.use(rPaths.directions, directions);
   app.use(rPaths.company, company);
+  app.use(rPaths.directionsTypes, directionsTypes);
 };

@@ -15,10 +15,10 @@ if (!existsSync(tmpDir)) {
 const app = express();
 
 app.use(cors());
-// TODO: app.use(cors({origin: "https://www.dentex-sl.ru/api"}));
+//app.use(cors({origin: "https://www.dentex-sl.ru"}));
 
-// app.use(helmet());
-// app.use(helmet.hidePoweredBy());
+app.use(helmet());
+app.use(helmet.hidePoweredBy());
 
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({
@@ -27,8 +27,9 @@ app.use(express.urlencoded({
   parameterLimit: 100000
 }));
 
-app.use("/adm", express.static(__dirname + "/public/adm"));
-app.use("/assets", express.static(__dirname + "/public/assets"));
+// testing:
+//app.use("/adm", express.static(__dirname + "/public/adm"));
+//app.use("/assets", express.static(__dirname + "/public/assets"));
 
 routes(app);
 

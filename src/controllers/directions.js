@@ -245,7 +245,7 @@ const read = async (req, res) => {
       d.direction_name, 
       d.human_name, 
       d.direction_type_id, 
-      dt.direction_name, 
+      dt.direction_name as direction_type_name,
       d.page_id, 
       p.page_name, 
       d.site_description, 
