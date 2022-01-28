@@ -225,7 +225,7 @@ const create = async (req, res) => {
   const {
     login,
     email,
-    password,
+    newPassword,
     firstname,
     middlename,
     lastname,
@@ -233,9 +233,9 @@ const create = async (req, res) => {
     active=false,
     rights=[]
   } = req.body;
-  const filePath = req.file.path;
+  const filePath = req?.file?.path;
 
-  if (empty(login) || empty(password) || empty(email)) {
+  if (empty(login) || empty(newPassword) || empty(email)) {
     unlinkFiles([filePath]);
     statusError.message = dict.errors.emptyLoginOrPasswordOrEmail;
     return res.status(status.bad).send(statusError);
@@ -246,7 +246,7 @@ const create = async (req, res) => {
     return res.status(status.bad).send(statusError);
   }
 
-  if (!validatePassword(password)) {
+  if (!validatePassword(newPassword)) {
     unlinkFiles([filePath]);
     statusError.message = dict.errors.validatePassword;
     return res.status(status.bad).send(statusError);
@@ -273,7 +273,7 @@ const create = async (req, res) => {
     return res.status(status.error).send(statusError);
   }
 
-  const hashedPassword = hashPassword(password);
+  const hashedPassword = hashPassword(newPassword);
   const createUserQuery = `
     INSERT INTO users (
       login,
@@ -306,7 +306,7 @@ const create = async (req, res) => {
     const firstRow = _.first(dbResponse);
     let rightsResponse = []
     if (!_.isEmpty(rights)) {
-      rightsResponse = await loggedQuery(req.user.id, `INSERT INTO users_rights(user_id, right_id) VALUES(${firstRow.id_user}, unnest(ARRAY[${rights}])) returning right_id;`);
+      rightsResponse = await loggedQuery(req.user.id, `INSERT INTO users_rights(user_id, right_id) VALUES(${firstRow.id_user}, unnest(ARRAY[${rights}])) returning *;`);
     }
 
     statusSuccess.data = {

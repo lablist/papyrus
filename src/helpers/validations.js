@@ -80,6 +80,9 @@ const noEmptyStr = (val, alternative=undefined) => {
   return val
 }
 
+const notFilledString = (v)=> (typeof v !== "string" || (typeof v === "string" && v.length === 0));
+const notFilledArray = (v)=> (!Array.isArray(v) || (Array.isArray(v)  && v.length === 0));
+
 module.exports = {
   hashPassword,
   comparePassword,
@@ -89,5 +92,7 @@ module.exports = {
   generateUserToken,
   hasAllElems,
   noNull,
-  noEmptyStr
+  noEmptyStr,
+  notFilledString,
+  notFilledArray
 };

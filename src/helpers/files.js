@@ -8,15 +8,16 @@ const {
   copyFile,
   mkdirSync
 } = require("fs");
+const {
+  notFilledString,
+  notFilledArray
+} = require("./validations");
 const appPath = resolve();
 
 const imgSavePath = "src/public/assets/img";
 const imgGetPath = "assets/img";
 
 typeof myVar === 'string'
-
-const notFilledString = (v)=> (typeof v !== "string" || (typeof v === "string" && v.length === 0));
-const notFilledArray = (v)=> (!Array.isArray(v) || (Array.isArray(v)  && v.length === 0));
 
 const getImagePath = (dbImagePathString) => {
   if (notFilledString(dbImagePathString)) {
@@ -46,6 +47,9 @@ const unlinkFiles = (paths=[]) => {
     }
 
     for (const singlePath of paths) {
+      if (typeof singlePath === "undefined") {
+        return;
+      }
       const filePath = resolve(singlePath);
       if (filePath === appPath) {
         return;
@@ -91,8 +95,6 @@ const uploadImg = (filePath, subFolderName="") => {
 }
 
 module.exports = {
-  notFilledString,
-  notFilledArray,
   unlinkFiles,
   uploadImg,
   getImagePath,

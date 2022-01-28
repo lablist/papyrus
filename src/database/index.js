@@ -28,6 +28,22 @@ const query = function(query, params=[]) {
   });
 }
 
+const queryOne = function(query, params=[]) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      db.one(query, params)
+        .then((res) => {
+          resolve(res);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
 const loggedQuery = function(userId, quertText, params) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -66,6 +82,7 @@ const loggedQuery = function(userId, quertText, params) {
 module.exports = {
   pgp,
   db,
+  queryOne,
   query,
   loggedQuery
 };
