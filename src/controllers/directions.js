@@ -29,7 +29,7 @@ const dict = {
   }
 }
 
-const read = async (req, res) => {
+const _getDTree = async () => {
   try {
     const getQuery = `
     WITH RECURSIVE nodes(
@@ -111,14 +111,24 @@ const read = async (req, res) => {
       ns.rate;
     `;
     const dbResponse = await query(getQuery);
-    statusSuccess.data = dbResponse;
-    statusSuccess.message = dict.success.received;
-    return res.status(status.success).send(statusSuccess);
+    return {ok: true, data: dbResponse}
   } catch (error) {
-    console.error(error);
+    return {ok: false, data: error}
+  }
+}
+
+const read = async (req, res) => {
+  const dTree = await _getDTree();
+
+  if (!dTree.ok) {
+    console.error(dTree.data);
     statusError.message = dict.errors.unknown;
     return res.status(status.error).send(statusError);
   }
+
+  statusSuccess.data = dTree.data;
+  statusSuccess.message = dict.success.received;
+  return res.status(status.success).send(statusSuccess);
 }
 
 const update = async (req, res) => {
@@ -309,6 +319,7 @@ const remove = async (req, res) => {
 };
 
 module.exports = {
+  _getDTree,
   read,
   update,
   remove
