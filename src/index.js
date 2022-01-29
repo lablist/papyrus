@@ -15,6 +15,7 @@ if (!existsSync(tmpDir)) {
 const app = express();
 
 app.use(cors());
+//app.use(cors({origin: "https://my.site.com"}));
 
 app.use(helmet());
 app.use(helmet.hidePoweredBy());

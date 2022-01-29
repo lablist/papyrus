@@ -33,13 +33,13 @@ const _getDTree = async () => {
   try {
     const getQuery = `
     WITH RECURSIVE nodes(
-      id_direction, parent_id, direction_path_name, 
-      rate, level
+      id_direction, parent_id, direction_path_name, direction_names, rate, level
     ) AS (
-      SELECT 
-        d1.id_direction, 
-        d1.parent_id, 
-        d1.direction_name :: text, 
+      SELECT
+        d1.id_direction,
+        d1.parent_id,
+        d1.direction_name :: text,
+        d1.human_name :: text, 
         row_number() over (
           order by 
             d1.rate
@@ -56,7 +56,11 @@ const _getDTree = async () => {
         concat(
           ns.direction_path_name :: text, '/', 
           d2.direction_name
-        ), 
+        ),
+        concat(
+          ns.direction_names :: text, '/', 
+          d2.human_name
+        ),
         (
           select 
             rate 
@@ -89,6 +93,7 @@ const _getDTree = async () => {
       ns.id_direction, 
       ns.parent_id, 
       ns.direction_path_name, 
+      ns.direction_names,
       ns.rate, 
       ns.level, 
       d.active, 

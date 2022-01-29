@@ -22,32 +22,6 @@ const {
 
 const appPath = path.resolve();
 
-/*
-  id_direction: '15',
-  parent_id: '0',
-  direction_path_name: 'contacts',
-  rate: '8',
-  level: 1,
-  active: true,
-  direction_name: 'contacts',
-  human_name: 'Контакты',
-  direction_type_id: '8',
-  direction_type_name: 'Контакты',
-  page_id: '28',
-  page_name: '',
-  site_description: '',
-  change_seq_id: 2092,
-  site_keywords: '',
-  site_title: ''
-
-  <ul>
-
-              <li><a href="elements.html">Elements</a></li>
-              <li>
-                <span class="opener">Submenu</span>
-                <ul>
-*/
-
 const leafIdName = "id_direction";
 const branchIdName = "parent_id";
 const orderName = "rate";
@@ -56,14 +30,14 @@ const humanName = "human_name";
 
 function getBranch(nodes, pid="0") {
   return nodes.filter((l)=>{
-    return (Number(l[branchIdName]) === Number(pid) )
+    return (Number(l[branchIdName]) === Number(pid) && l.active)
   }).sort((a,b)=>(Number(a[orderName]) - Number(b[orderName])))
 }
 
 function leaf(nodes, leafItem, leafIndex) {
   const leafId = leafItem[leafIdName];
   const branch = getBranch(nodes, leafId);
-  const aHref = `${leafItem[pathName]}.html`;
+  const aHref = `/${leafItem[pathName]}.html`;
   if (notFilledArray(branch)) {
     return `<li><a href="${aHref}">${leafItem[humanName]}</a></li>`;
   }
@@ -90,8 +64,10 @@ const dict = {
 const all = async (req, res) => {
   try {
     const cData = await queryOne('SELECT * FROM company LIMIT 1;');
+    const pages = await query('SELECT * FROM pages;');
 
     const homePathStr = path.join(appPath, "/src/views/pages/home.ejs");
+    const pagePathTmpStr = path.join(appPath, "/src/views/pages/page.ejs");
 
     const dTree = await _getDTree();
     if (!dTree.ok) {
@@ -101,17 +77,15 @@ const all = async (req, res) => {
     }
     const menuTree = branches(dTree.data, "0")
 
-    const homeStr = await ejs.renderFile(homePathStr, {data: cData, menu: menuTree}, {async: false });
+    const homeDir = dTree.data.find(i=>i[leafIdName] == 1);
+    const homePage = pages.find(i=>i.id_page == homeDir["page_id"]);
+
+    const homeStr = await ejs.renderFile(homePathStr, {data: cData, menu: menuTree, homePage: homePage}, {async: false });
 
     const mainPathStr = path.join(appPath, "/src/public/index.html");
     writeFileSync(mainPathStr, homeStr, { encoding:'utf8', flag:'w' });
 
-    const pages = await query('SELECT * FROM pages;');
-
-    const pagePathTmpStr = path.join(appPath, "/src/views/pages/page.ejs");
-
     const renderPage = async (element) => {
-
       const pageId = element["page_id"];
       const pagePath = element["direction_path_name"] || "";
       const dbPage = pages.find(i=>i.id_page == pageId);
@@ -120,7 +94,6 @@ const all = async (req, res) => {
         photo: "",
         body: ""
       }
-      console.log("dbPage", dbPage);
 
       if (pagePath.length <= 0 || !dbPage) {
         return;
@@ -128,8 +101,9 @@ const all = async (req, res) => {
 
       if (pageId) {
         page = {
+          pageDir: `<a href="/index.html" class="logo"><strong>Главная/${element?.direction_names}</strong></a>`,
           name: dbPage.page_name,
-          photo: dbPage.page_photo ? `<span class="image main"><img src="${dbPage.page_photo}" alt="" /></span>` : "",
+          photo: dbPage.page_photo ? `<span class="image main"><img src="/assets/img/${dbPage.page_photo}" alt="" /></span>` : "",
           body: dbPage.page_body
         }
       }
@@ -144,7 +118,7 @@ const all = async (req, res) => {
         site_title: dbPage?.site_title ? dbPage?.site_title : cData.site_title,
         site_keywords: dbPage?.site_keywords ? dbPage?.site_keywords : cData.site_keywords,
         site_description: dbPage?.site_description ? dbPage?.site_description : cData.site_description
-      }, page: page, menu: menuTree}, {async: false });
+      }, page: page, menu: menuTree, cData: cData}, {async: false });
       writeFileSync(pagePathStr, homeStr, { encoding:'utf8', flag:'w' });
     }
 
