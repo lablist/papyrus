@@ -1,4 +1,3 @@
-
 const {
   existsSync,
   mkdirSync,
@@ -17,16 +16,28 @@ const {
   _getDTree
 } = require("./directions");
 const {
+  _getPrices
+} = require("./prices");
+const {
+  _getPriceTypes
+} = require("./priceTypes");
+const {
   notFilledArray
 } = require("../helpers/validations");
 
 const appPath = path.resolve();
 
+const leafIdType= "direction_type_id";
 const leafIdName = "id_direction";
 const branchIdName = "parent_id";
 const orderName = "rate";
 const pathName = "direction_path_name";
 const humanName = "human_name";
+
+const leafTypes = {
+  prices: 4,
+  contacts: 8
+}
 
 function getBranch(nodes, pid="0") {
   return nodes.filter((l)=>{
@@ -51,6 +62,38 @@ function branches(nodes, pid) {
   }
 }
 
+
+function getPriceRows(prices=[], tid) {
+  return prices.filter((l)=>{
+    return (Number(l.typeid) === Number(tid))
+  }).sort((a,b)=>(Number(a[orderName]) - Number(b[orderName])))
+}
+
+function getPricesTable(pType, prices=[]) {
+  if (notFilledArray(prices)) {
+    return "";
+  }
+  const rows = getPriceRows(prices, pType?.id);
+  if (!notFilledArray(rows)) {
+    return `
+        <h4>${pType?.name || ""}</h4>
+        <div class="table-wrapper">
+          <table class="alt">
+            <thead>
+              <tr><th>Код услуги</th><th>Наименование услуги</th><th>Цена услуги</th></tr>
+            </thead>
+            <tbody>
+              ${rows.map((rowItem) => (`<tr><td>${rowItem.code}</td><td>${rowItem.name}</td><td>${rowItem.price}</td></tr>`)).join("")}
+            </tbody>
+            <tfoot>
+              <tr><td colspan="2"></td><td>100.00</td></tr>
+            </tfoot>
+          </table>
+        </div>
+      `;
+  }
+}
+
 const dict = {
   success: {
     created: "Сайт создан.",
@@ -68,6 +111,8 @@ const all = async (req, res) => {
 
     const homePathStr = path.join(appPath, "/src/views/pages/home.ejs");
     const pagePathTmpStr = path.join(appPath, "/src/views/pages/page.ejs");
+    const contactsPathStr = path.join(appPath, "/src/views/pages/contacts.ejs");
+    const pricesPathStr = path.join(appPath, "/src/views/pages/prices.ejs");
 
     const dTree = await _getDTree();
     if (!dTree.ok) {
@@ -75,7 +120,7 @@ const all = async (req, res) => {
       statusError.message = dict.errors.unknown;
       return res.status(status.error).send(statusError);
     }
-    const menuTree = branches(dTree.data, "0")
+    const menuTree = branches(dTree.data, "0");
 
     const homeDir = dTree.data.find(i=>i[leafIdName] == 1);
     const homePage = pages.find(i=>i.id_page == homeDir["page_id"]);
@@ -112,6 +157,38 @@ const all = async (req, res) => {
       const pageFileStr = path.basename(pagePathStr);
       if (!existsSync(pagePathDirStr)) {
         mkdirSync(pagePathDirStr);
+      }
+
+      if (leafTypes.contacts == element[leafIdType]) {
+        let yamap = "";
+        if (cData.yandex_map) {
+          yamap = `<iframe src="${cData.yandex_map}" width="100%" height="400" frameborder="0"></iframe>`
+        }
+        const homeStr = await ejs.renderFile(contactsPathStr, {data: {
+          site_title: dbPage?.site_title ? dbPage?.site_title : cData.site_title,
+          site_keywords: dbPage?.site_keywords ? dbPage?.site_keywords : cData.site_keywords,
+          site_description: dbPage?.site_description ? dbPage?.site_description : cData.site_description
+        }, page: page, menu: menuTree, cData: cData, yamap : yamap}, {async: false });
+        writeFileSync(pagePathStr, homeStr, { encoding:'utf8', flag:'w' });
+        return;
+      }
+
+      if (leafTypes.prices == element[leafIdType]) {
+        let pTable = "";
+        const priceTypes = await _getPriceTypes();
+        const pricesTable = await _getPrices();
+
+        if (priceTypes.ok && !notFilledArray(priceTypes.data) && pricesTable.ok && !notFilledArray(pricesTable.data)) {
+          pTable = priceTypes.data.map((pType)=>getPricesTable(pType, pricesTable.data)).join("")
+        }
+
+        const homeStr = await ejs.renderFile(pricesPathStr, {data: {
+          site_title: dbPage?.site_title ? dbPage?.site_title : cData.site_title,
+          site_keywords: dbPage?.site_keywords ? dbPage?.site_keywords : cData.site_keywords,
+          site_description: dbPage?.site_description ? dbPage?.site_description : cData.site_description
+        }, page: page, menu: menuTree, cData: cData, pTable : pTable}, {async: false });
+        writeFileSync(pagePathStr, homeStr, { encoding:'utf8', flag:'w' });
+        return;
       }
 
       const homeStr = await ejs.renderFile(pagePathTmpStr, {data: {
