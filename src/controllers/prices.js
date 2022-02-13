@@ -64,15 +64,11 @@ const create = async (req, res) => {
   const {
     code="",
     name="",
-    price,
+    price="0",
     typeid
    } = req.body;
 
   if (notFilledString(code) || notFilledString(name)) {
-    
-   console.log("code", code);
-   console.log("name", name);
-
     statusError.message = dict.errors.empty;
     return res.status(status.bad).send(statusError);
   }
@@ -93,7 +89,7 @@ const create = async (req, res) => {
     const getRate = `SELECT (coalesce(MAX(rate),  0) + 1) as nextRate FROM prices;`;
     const { nextrate } = await queryOne(getRate);
   
-    const dbResponse = await loggedQuery(req.user.id, createQuery, [code, name, price, typeid, nextrate]);
+    const dbResponse = await loggedQuery(req.user.id, createQuery, [code, name, price, _.toNumber(typeid, 0), nextrate]);
     const firstRow = _.first(dbResponse);
 
     statusSuccess.data = {
@@ -106,7 +102,7 @@ const create = async (req, res) => {
     };
 
     statusSuccess.message = dict.success.dataAdded;
-    //return res.status(status.created).send(statusSuccess);
+    return res.status(status.created).send(statusSuccess);
   } catch (error) {
     console.error(error);
     statusError.message = dict.errors.unknown;
@@ -184,7 +180,7 @@ const remove = async (req, res) => {
     await query(removeQuery);
     statusSuccess.data = {};
     statusSuccess.message = dict.success.deleted;
-    //return res.status(status.created).send(statusSuccess);
+    return res.status(status.created).send(statusSuccess);
   } catch (error) {
     console.error(error);
     statusError.message = dict.errors.unknown;

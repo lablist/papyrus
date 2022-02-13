@@ -139,7 +139,6 @@ const remove = async (req, res) => {
   }
 
   try {
-
     const removeQuery = `
       DELETE FROM prices WHERE price_type_id = ${id};
       UPDATE prices
@@ -153,7 +152,7 @@ const remove = async (req, res) => {
       ) AS subquery
       WHERE prices.id_price = subquery.id_price;
 
-      DELETE FROM price_types WHERE id_price = ${id};
+      DELETE FROM price_types WHERE id_price_type = ${id};
       UPDATE price_types
       SET rate = subquery.rate
       FROM (

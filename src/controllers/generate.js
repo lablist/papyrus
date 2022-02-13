@@ -86,7 +86,7 @@ function getPricesTable(pType, prices=[]) {
               ${rows.map((rowItem) => (`<tr><td>${rowItem.code}</td><td>${rowItem.name}</td><td>${rowItem.price}</td></tr>`)).join("")}
             </tbody>
             <tfoot>
-              <tr><td colspan="2"></td><td>100.00</td></tr>
+              <tr><td colspan="3"></td></tr>
             </tfoot>
           </table>
         </div>
